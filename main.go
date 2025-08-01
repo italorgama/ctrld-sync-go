@@ -29,7 +29,6 @@ const (
 	MaxConcurrentProfiles = 3 // Maximum number of profiles to sync concurrently
 )
 
-// Folder URLs - same as Python version
 var FolderURLs = []string{
 	"https://raw.githubusercontent.com/hagezi/dns-blocklists/main/controld/apple-private-relay-allow-folder.json",
 	"https://raw.githubusercontent.com/hagezi/dns-blocklists/main/controld/native-tracker-amazon-folder.json",
