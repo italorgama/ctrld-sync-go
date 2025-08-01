@@ -1,62 +1,62 @@
 # Control D Sync
 
-Utilitário em Go que mantém suas pastas do Control D sincronizadas com listas de bloqueio remotas.
+A Go utility that keeps your Control D folders synchronized with remote blocklist data.
 
-## O que faz
+## What it does
 
-Este utilitário faz três coisas principais:
-1. **Lê os nomes das pastas** dos arquivos JSON remotos
-2. **Deleta pastas existentes** com esses nomes (para começar do zero)
-3. **Recria as pastas** e adiciona todas as regras em lotes
+This utility does three main things:
+1. **Reads folder names** from remote JSON files
+2. **Deletes existing folders** with those names (to start fresh)
+3. **Recreates the folders** and adds all rules in batches
 
-Nada complicado, apenas funciona.
+Nothing complicated, it just works.
 
-## Características
+## Features
 
-- **Performance superior**: Binário compilado nativo
-- **Deploy simples**: Binário único sem dependências externas
-- **Eficiente**: Baixo uso de memória (~10-15MB)
-- **Rápido**: Startup em ~100ms
+- **Superior performance**: Native compiled binary
+- **Simple deployment**: Single binary with no external dependencies
+- **Efficient**: Low memory usage (~10-15MB)
+- **Fast**: ~100ms startup time
 
-## Configuração
+## Setup
 
-### 1. Variáveis de ambiente
+### 1. Environment variables
 
-Crie um arquivo `.env` baseado no `.env.example`:
+Create a `.env` file based on `.env.example`:
 
 ```bash
-TOKEN=seu_token_do_control_d_aqui
-PROFILE=seu_profile_id_aqui
+TOKEN=your_control_d_token_here
+PROFILE=your_profile_id_here
 ```
 
-- `TOKEN`: Seu token de API do Control D
-- `PROFILE`: ID do perfil (ou múltiplos IDs separados por vírgula)
+- `TOKEN`: Your Control D API token
+- `PROFILE`: Profile ID (or multiple IDs separated by comma)
 
-### 2. Compilação
+### 2. Compilation
 
 ```bash
-# Instalar dependências
+# Install dependencies
 go mod tidy
 
-# Compilar o binário
+# Compile the binary
 go build -o ctrld-sync main.go
 ```
 
-### 3. Execução
+### 3. Execution
 
 ```bash
-# Executar diretamente
+# Run directly
 ./ctrld-sync
 
-# Ou executar com go run
+# Or run with go run
 go run main.go
 ```
 
-## Funcionalidades
+## Functionality
 
-### Listas de bloqueio suportadas
+### Supported blocklists
 
-O script sincroniza automaticamente com as seguintes listas do [hagezi/dns-blocklists](https://github.com/hagezi/dns-blocklists):
+The script automatically synchronizes with the following lists from [hagezi/dns-blocklists](https://github.com/hagezi/dns-blocklists):
 
 - Apple Private Relay Allow
 - Native Tracker (Amazon, Apple, Huawei, LG WebOS, Microsoft, OPPO/Realme, Roku, Samsung, TikTok, Vivo, Xiaomi)
@@ -65,137 +65,109 @@ O script sincroniza automaticamente com as seguintes listas do [hagezi/dns-block
 - Spam (IDNs, TLDs, TLDs Allow)
 - Badware Hoster
 
-### Características técnicas
+### Technical features
 
-- **Processamento concorrente**: Múltiplos perfis sincronizados simultaneamente (máx. 3)
-- **Retry logic**: Tentativas automáticas com backoff exponencial
-- **Processamento em lotes**: Regras enviadas em grupos de 500
-- **Cache inteligente**: URLs já buscadas são mantidas em cache
-- **Detecção de duplicatas**: Evita regras duplicadas entre pastas
-- **Logging detalhado**: Acompanhe o progresso em tempo real
-- **Múltiplos perfis**: Suporte a vários perfis Control D com sincronização paralela
+- **Concurrent processing**: Multiple profiles synchronized simultaneously (max 3)
+- **Retry logic**: Automatic retries with exponential backoff
+- **Batch processing**: Rules sent in groups of 500
+- **Smart caching**: Already fetched URLs are kept in cache
+- **Duplicate detection**: Avoids duplicate rules between folders
+- **Detailed logging**: Track progress in real time
+- **Multiple profiles**: Support for multiple Control D profiles with parallel synchronization
 
-## Estrutura do código
+## Code structure
 
 ```
-main.go          # Código principal
-go.mod           # Dependências Go
-go.sum           # Lock file das dependências
-.env.example     # Exemplo de configuração
-README-go.md     # Esta documentação
+main.go          # Main code
+go.mod           # Go dependencies
+go.sum           # Dependencies lock file
+.env.example     # Configuration example
+README-go.md     # This documentation
 ```
 
-## Processamento Concorrente
+## Concurrent Processing
 
-### Como funciona
+### How it works
 
-Quando você tem múltiplos perfis configurados (separados por vírgula), o script processa até **3 perfis simultaneamente** usando goroutines:
+When you have multiple profiles configured (separated by comma), the script processes up to **3 profiles simultaneously** using goroutines:
 
 ```bash
-# Exemplo com múltiplos perfis
+# Example with multiple profiles
 PROFILE=profile1,profile2,profile3,profile4,profile5
 ```
 
-### Benefícios da concorrência
+### Concurrency benefits
 
-- **3-5x mais rápido** para múltiplos perfis
-- **Uso eficiente** de recursos de rede
-- **Controle de limite** para não sobrecarregar a API
-- **Processamento independente** - falha em um perfil não afeta outros
-
-### Logs de exemplo (múltiplos perfis)
-
-```
-Starting concurrent sync for 3 profiles (max 3 concurrent)
-Starting sync for profile 12345
-Starting sync for profile 67890
-Starting sync for profile 54321
-Deleted folder 'Apple Private Relay Allow' (ID 67890)
-Created folder 'Apple Private Relay Allow' (ID 67891)
-Folder 'Apple Private Relay Allow' – batch 1: added 500 rules
-Folder 'Apple Private Relay Allow' – finished (1247 new rules added)
-Sync complete: 18/18 folders processed successfully
-All profiles processed: 3/3 successful
-```
-
-## Logs de exemplo (perfil único)
-
-```
-Starting concurrent sync for 1 profiles (max 3 concurrent)
-Starting sync for profile 12345
-Deleted folder 'Apple Private Relay Allow' (ID 67890)
-Created folder 'Apple Private Relay Allow' (ID 67891)
-Folder 'Apple Private Relay Allow' – batch 1: added 500 rules
-Folder 'Apple Private Relay Allow' – finished (1247 new rules added)
-Sync complete: 18/18 folders processed successfully
-All profiles processed: 1/1 successful
-```
+- **3-5x faster** for multiple profiles
+- **Efficient use** of network resources
+- **Rate limiting** to avoid overloading the API
+- **Independent processing** - failure in one profile doesn't affect others
 
 ## Troubleshooting
 
-### Erro de compilação
+### Compilation error
 ```bash
-# Limpar cache e reinstalar dependências
+# Clear cache and reinstall dependencies
 go clean -modcache
 go mod tidy
 ```
 
-### Erro de permissão
+### Permission error
 ```bash
-# Dar permissão de execução ao binário
+# Give execution permission to binary
 chmod +x ctrld-sync
 ```
 
-### Problemas de API
-- Verifique se o TOKEN está correto
-- Confirme se o PROFILE ID existe
-- Verifique sua conexão com a internet
+### API issues
+- Check if TOKEN is correct
+- Confirm PROFILE ID exists
+- Check your internet connection
 
-## Desenvolvimento
+## Development
 
-### Estrutura do código Go
+### Go code structure
 
-- **Structs**: Definições de tipos para JSON da API
-- **HTTP Clients**: Clientes separados para API e GitHub
-- **Retry Logic**: Implementação robusta com backoff exponencial
-- **Error Handling**: Tratamento de erros detalhado
-- **Logging**: Sistema de logs estruturado
-- **Concorrência**: Goroutines com semáforos para controle de limite
+- **Structs**: Type definitions for API JSON
+- **HTTP Clients**: Separate clients for API and GitHub
+- **Retry Logic**: Robust implementation with exponential backoff
+- **Error Handling**: Detailed error handling
+- **Logging**: Structured logging system
+- **Concurrency**: Goroutines with semaphores for rate limiting
 
-### Executar em modo debug
+### Run in debug mode
 
 ```bash
-# Compilar com informações de debug
+# Compile with debug information
 go build -gcflags="all=-N -l" -o ctrld-sync-debug main.go
 
-# Executar com logs verbosos
+# Run with verbose logs
 ./ctrld-sync-debug
 ```
 
-### Configurações avançadas
+### Advanced configuration
 
-Para ajustar o limite de concorrência, modifique a constante no código:
+To adjust the concurrency limit, modify the constant in the code:
 
 ```go
-const MaxConcurrentProfiles = 3 // Ajuste conforme necessário
+const MaxConcurrentProfiles = 3 // Adjust as needed
 ```
 
 ## Performance
 
-### Métricas típicas
+### Typical metrics
 
-- **Tempo de startup**: ~100ms
-- **Uso de memória**: ~10-15MB
-- **Tamanho do executável**: ~8-12MB
-- **Dependências externas**: Nenhuma
+- **Startup time**: ~100ms
+- **Memory usage**: ~10-15MB
+- **Executable size**: ~8-12MB
+- **External dependencies**: None
 
-### Otimizações implementadas
+### Implemented optimizations
 
-- Cache em memória para URLs já buscadas
-- Processamento concorrente de múltiplos perfis
-- Retry logic com backoff exponencial
-- Detecção de duplicatas para evitar regras redundantes
+- In-memory cache for already fetched URLs
+- Concurrent processing of multiple profiles
+- Retry logic with exponential backoff
+- Duplicate detection to avoid redundant rules
 
-## Licença
+## License
 
-MIT License - veja o arquivo LICENSE para detalhes.
+MIT License - see LICENSE file for details.
