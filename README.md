@@ -26,7 +26,7 @@ Create a `.env` file based on `.env.example`:
 
 ```bash
 TOKEN=your_control_d_token_here
-PROFILE=your_profile_id_here
+PROFILE=your_profile_id_here_1,your_profile_id_here_2,your_profile_id_here_3
 ```
 
 - `TOKEN`: Your Control D API token
@@ -56,7 +56,7 @@ go run main.go
 
 ### Supported blocklists
 
-The script automatically synchronizes with the following lists from [hagezi/dns-blocklists](https://github.com/hagezi/dns-blocklists):
+The script automatically synchronizes with the following lists from [hagezi/dns-blocklists](https://github.com/hagezi/dns-blocklists/tree/main/controld):
 
 - Apple Private Relay Allow
 - Native Tracker (Amazon, Apple, Huawei, LG WebOS, Microsoft, OPPO/Realme, Roku, Samsung, TikTok, Vivo, Xiaomi)
@@ -64,6 +64,8 @@ The script automatically synchronizes with the following lists from [hagezi/dns-
 - Referral Allow
 - Spam (IDNs, TLDs, TLDs Allow)
 - Badware Hoster
+
+You can add or remove lists as needed — just edit the FolderURLs array in the source code.
 
 ### Technical features
 
