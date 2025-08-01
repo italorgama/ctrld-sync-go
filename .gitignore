@@ -1,0 +1,23 @@
+# Go binaries and build artifacts
+ctrld-sync
+ctrld-sync.exe
+ctrld-sync-*
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Go test files
+*.test
+
+# Go coverage files
+*.out
+
+# Go vendor directory (if using vendor)
+vendor/
+
+# Go workspace file
+go.work
+go.work.sum
+
+.env
