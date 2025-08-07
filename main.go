@@ -94,6 +94,7 @@ var (
 	apiClient  *http.Client
 	ghClient   *http.Client
 	cache      = make(map[string]FolderData)
+	cacheMutex sync.RWMutex
 )
 
 // Logger setup
@@ -213,9 +214,13 @@ func apiPostForm(endpoint string, data map[string]string) (*http.Response, error
 
 // GitHub GET request (cached)
 func ghGet(url string) (FolderData, error) {
+	// Check cache with read lock
+	cacheMutex.RLock()
 	if data, exists := cache[url]; exists {
+		cacheMutex.RUnlock()
 		return data, nil
 	}
+	cacheMutex.RUnlock()
 
 	resp, err := ghClient.Get(url)
 	if err != nil {
@@ -232,7 +237,11 @@ func ghGet(url string) (FolderData, error) {
 		return FolderData{}, err
 	}
 
+	// Write to cache with write lock
+	cacheMutex.Lock()
 	cache[url] = data
+	cacheMutex.Unlock()
+
 	return data, nil
 }
 
@@ -532,16 +541,18 @@ func syncProfile(profileID string) bool {
 func main() {
 	setupLogger()
 
-	// Load environment variables
-	if err := godotenv.Load(); err != nil {
-		log.Printf("Warning: Error loading .env file: %v", err)
+	// Load environment variables from .env file if it exists
+	if _, err := os.Stat(".env"); err == nil {
+		if err := godotenv.Load(); err != nil {
+			log.Printf("Warning: Error loading .env file: %v", err)
+		}
 	}
 
 	token = os.Getenv("TOKEN")
 	profilesEnv := os.Getenv("PROFILE")
 
 	if token == "" || profilesEnv == "" {
-		log.Fatal("TOKEN and/or PROFILE missing - check your .env file")
+		log.Fatal("TOKEN and/or PROFILE environment variables are required")
 	}
 
 	// Parse profile IDs
