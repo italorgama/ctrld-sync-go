@@ -1,0 +1,35 @@
+name: Check for new release
+
+on:
+  schedule:
+    - cron: "0 */2 * * *" # Every 2 hours
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get latest release tag
+        id: release
+        run: |
+          TAG=$(curl -s https://api.github.com/repos/hagezi/dns-blocklists/releases/latest | jq -r .tag_name)
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Restore cached tag
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: .last-release-tag
+          key: hagezi-release-${{ steps.release.outputs.tag }}
+
+      - name: Check if release is new
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          echo "${{ steps.release.outputs.tag }}" > .last-release-tag
+          echo "New release detected: ${{ steps.release.outputs.tag }}"
+
+      - name: Trigger sync workflow
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: gh workflow run sync.yml
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
