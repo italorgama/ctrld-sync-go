@@ -18,6 +18,10 @@ jobs:
         id: release
         run: |
           TAG=$(curl -s https://api.github.com/repos/hagezi/dns-blocklists/releases/latest | jq -r .tag_name)
+          if [ -z "$TAG" ] || [ "$TAG" = "null" ]; then
+            echo "Failed to fetch release tag"
+            exit 1
+          fi
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
       - name: Restore cached tag
