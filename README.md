@@ -1,6 +1,6 @@
-# ctrld-sync
+# ctrld-hagezi-sync
 
-Syncs [Hagezi DNS blocklists](https://github.com/hagezi/dns-blocklists/tree/main/controld) with your Control D profile(s). For each list, it deletes the existing folder and recreates it with the latest rules.
+Keeps your Control D profile(s) in sync with [Hagezi DNS blocklists](https://github.com/hagezi/dns-blocklists/tree/main/controld), automatically triggered whenever Hagezi releases an update.
 
 ## Setup
 

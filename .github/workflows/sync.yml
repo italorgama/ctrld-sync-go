@@ -18,10 +18,10 @@ jobs:
           cache: true
 
       - name: Build Go binary
-        run: go build -o ctrld-sync main.go
+        run: go build -o ctrld-hagezi-sync main.go
 
       - name: Run sync script
         env:
           TOKEN: ${{ secrets.TOKEN }}
           PROFILE: ${{ secrets.PROFILE }}
-        run: ./ctrld-sync
+        run: ./ctrld-hagezi-sync

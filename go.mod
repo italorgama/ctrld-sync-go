@@ -1,4 +1,4 @@
-module ctrld-sync
+module ctrld-hagezi-sync
 
 go 1.21
 
