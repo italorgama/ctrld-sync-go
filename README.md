@@ -40,7 +40,7 @@ The repository comes pre-configured with:
 - Spam IDNs, Spam TLDs, Spam TLDs Allow
 - Badware Hoster
 
-To add or remove lists, edit `lists.txt`. All available Hagezi lists for Control D can be found [here](https://github.com/hagezi/dns-blocklists/tree/main/controld). Make sure to use the raw URL (click **Raw** on GitHub).
+To add or remove lists, edit `lists.txt`. Run `make list` to see all available Hagezi lists with their raw URLs ready to paste.
 
 ## Automation
 
