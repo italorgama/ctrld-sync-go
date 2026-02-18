@@ -42,12 +42,12 @@ To add or remove lists, edit `FolderURLs` in `main.go`.
 
 ## Automation
 
-The included GitHub Actions workflows handle automatic syncing:
+Fork this repository to use the included GitHub Actions workflows:
 
 - `check-release.yml`: Runs every 2 hours and triggers a sync when a new Hagezi release is detected
 - `sync.yml`: Runs the sync (triggered by `check-release.yml` or manually)
 
-Required secrets: `TOKEN`, `PROFILE`
+After forking, add `TOKEN` and `PROFILE` to your repository secrets under **Settings → Secrets and variables → Actions**.
 
 ## License
 
