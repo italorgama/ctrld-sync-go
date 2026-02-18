@@ -29,7 +29,9 @@ go build -o ctrld-sync main.go
 
 ## Synced lists
 
-From [hagezi/dns-blocklists](https://github.com/hagezi/dns-blocklists/tree/main/controld):
+Lists are configured in `lists.txt` — one URL per line. Lines starting with `#` are ignored.
+
+The repository comes pre-configured with:
 
 - Apple Private Relay Allow
 - Native Trackers: Amazon, Apple, Huawei, LG WebOS, Microsoft, OPPO/Realme, Roku, Samsung, TikTok, Vivo, Xiaomi
@@ -38,7 +40,7 @@ From [hagezi/dns-blocklists](https://github.com/hagezi/dns-blocklists/tree/main/
 - Spam IDNs, Spam TLDs, Spam TLDs Allow
 - Badware Hoster
 
-To add or remove lists, edit `FolderURLs` in `main.go`.
+To add or remove lists, edit `lists.txt`. All available Hagezi lists for Control D can be found [here](https://github.com/hagezi/dns-blocklists/tree/main/controld) — use any file ending in `-folder.json`.
 
 ## Automation
 
