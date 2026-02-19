@@ -2,54 +2,67 @@
 
 Keeps your Control D profile(s) in sync with [Hagezi DNS blocklists](https://github.com/hagezi/dns-blocklists/tree/main/controld), automatically triggered whenever Hagezi releases an update.
 
+Everything runs on GitHub Actions — no local setup, no ⁠ .env ⁠ file.
+
 ## Setup
 
-Copy `.env.example` to `.env` and fill in your credentials:
+### 1. Fork this repository
 
-```
-TOKEN=your_control_d_api_token
-PROFILE=profile_id_1,profile_id_2
-```
+Click *Fork* on the top right of this page.
 
-- `TOKEN`: Control D API token
-- `PROFILE`: One or more profile IDs separated by comma
+	⁠After forking, go to the *Actions* tab in your fork and enable workflows if prompted.
 
-## Running
+### 2. Get your Control D credentials
 
-```bash
-go run main.go
-```
+*API token*
+1.⁠ ⁠Log in to your Control D account.
+2.⁠ ⁠Go to *Preferences → API*.
+3.⁠ ⁠Click *+* to create a new token and copy it.
 
-Or build and run:
+*Profile ID*
+1.⁠ ⁠Open the profile you want to sync.
+2.⁠ ⁠Copy the ID from the URL:
 
-```bash
-go build -o ctrld-sync main.go
-./ctrld-sync
-```
+https://controld.com/dashboard/profiles/abc123xyz/filters
+                                        ^^^^^^^^^^^
+
+
+### 3. Add repository secrets
+
+Go to *Settings → Secrets and variables → Actions → New repository secret* and add:
+
+| Secret    | Value                                                        |
+|-----------|--------------------------------------------------------------|
+| ⁠ TOKEN ⁠   | Your Control D API token                                     |
+| ⁠ PROFILE ⁠ | One or more profile IDs, comma-separated (e.g. ⁠ id1,id2 ⁠)   |
+
+That's it. The workflows will run automatically from now on.
+
+## How it works
+
+| Workflow              | Trigger                        | What it does                                                  |
+|-----------------------|--------------------------------|---------------------------------------------------------------|
+| ⁠ check-release.yml ⁠   | Every 2 hours                  | Checks for a new Hagezi release and triggers sync if detected |
+| ⁠ sync.yml ⁠            | Triggered by check, or manually| Builds the binary and runs the sync against your profile(s)   |
+
+You can also trigger a manual sync anytime via *Actions → Sync → Run workflow*.
 
 ## Synced lists
 
-Lists are configured in `lists.txt` — one URL per line. Lines starting with `#` are ignored.
+Although this project ships pre-configured for Hagezi — chosen for the quality of its lists and the activity of the project — it supports any list in Control D's JSON folder format. Just add the raw URL to ⁠ lists.txt ⁠.
+
+Lists are configured in ⁠ lists.txt ⁠ — one URL per line. Lines starting with ⁠ # ⁠ are ignored.
 
 The repository comes pre-configured with:
 
-- Apple Private Relay Allow
-- Native Trackers: Amazon, Apple, Huawei, LG WebOS, Microsoft, OPPO/Realme, Roku, Samsung, TikTok, Vivo, Xiaomi
-- Ultimate Known Issues Allow
-- Referral Allow
-- Spam IDNs, Spam TLDs, Spam TLDs Allow
-- Badware Hoster
+•⁠  ⁠Apple Private Relay Allow
+•⁠  ⁠Native Trackers: Amazon, Apple, Huawei, LG WebOS, Microsoft, OPPO/Realme, Roku, Samsung, TikTok, Vivo, Xiaomi
+•⁠  ⁠Ultimate Known Issues Allow
+•⁠  ⁠Referral Allow
+•⁠  ⁠Spam IDNs, Spam TLDs, Spam TLDs Allow
+•⁠  ⁠Badware Hoster
 
-To add or remove lists, edit `lists.txt`. Run `make list` to see all available Hagezi lists with their raw URLs ready to paste.
-
-## Automation
-
-Fork this repository to use the included GitHub Actions workflows:
-
-- `check-release.yml`: Runs every 2 hours and triggers a sync when a new Hagezi release is detected
-- `sync.yml`: Runs the sync (triggered by `check-release.yml` or manually)
-
-After forking, add `TOKEN` and `PROFILE` to your repository secrets under **Settings → Secrets and variables → Actions**.
+To add or remove lists, edit ⁠ lists.txt ⁠. Run ⁠ make list ⁠ to see all available Hagezi lists with their raw URLs ready to paste.
 
 ## License
 
