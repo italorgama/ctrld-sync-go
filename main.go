@@ -485,7 +485,7 @@ func pushRules(profileID, folderName, folderID string, do, status int, hostnames
 // Sync profile
 func syncProfile(profileID string) ProfileResult {
 	result := ProfileResult{ProfileID: profileID}
-	log.Printf("Starting sync for profile %s", profileID)
+	log.Printf("Starting sync for profile %s", maskID(profileID))
 
 	// Fetch all folder data first
 	var folderDataList []FolderData
