@@ -87,6 +87,19 @@ type APIRulesResponse struct {
 	} `json:"body"`
 }
 
+type FolderResult struct {
+	Name       string
+	Rules      int
+	Duplicates int
+	Success    bool
+}
+
+type ProfileResult struct {
+	ProfileID string
+	Folders   []FolderResult
+	Success   bool
+}
+
 // Global variables
 var (
 	token      string
@@ -396,10 +409,10 @@ func createFolder(profileID, name string, do, status int) (string, error) {
 }
 
 // Push rules in batches
-func pushRules(profileID, folderName, folderID string, do, status int, hostnames []string, existingRules map[string]bool) bool {
+func pushRules(profileID, folderName, folderID string, do, status int, hostnames []string, existingRules map[string]bool) (int, int, bool) {
 	if len(hostnames) == 0 {
 		log.Printf("Folder '%s' - no rules to push", folderName)
-		return true
+		return 0, 0, true
 	}
 
 	// Filter out duplicates
@@ -418,10 +431,11 @@ func pushRules(profileID, folderName, folderID string, do, status int, hostnames
 
 	if len(filteredHostnames) == 0 {
 		log.Printf("Folder '%s' - no new rules to push after filtering duplicates", folderName)
-		return true
+		return 0, duplicatesCount, true
 	}
 
 	successfulBatches := 0
+	rulesAdded := 0
 	totalBatches := (len(filteredHostnames) + BatchSize - 1) / BatchSize
 
 	for i := 0; i < len(filteredHostnames); i += BatchSize {
@@ -451,6 +465,7 @@ func pushRules(profileID, folderName, folderID string, do, status int, hostnames
 
 		log.Printf("Folder '%s' – batch %d: added %d rules", folderName, batchNum, len(batch))
 		successfulBatches++
+		rulesAdded += len(batch)
 
 		// Update existing rules set
 		for _, hostname := range batch {
@@ -459,16 +474,17 @@ func pushRules(profileID, folderName, folderID string, do, status int, hostnames
 	}
 
 	if successfulBatches == totalBatches {
-		log.Printf("Folder '%s' – finished (%d new rules added)", folderName, len(filteredHostnames))
-		return true
+		log.Printf("Folder '%s' – finished (%d new rules added)", folderName, rulesAdded)
+		return rulesAdded, duplicatesCount, true
 	} else {
 		log.Printf("Folder '%s' – only %d/%d batches succeeded", folderName, successfulBatches, totalBatches)
-		return false
+		return rulesAdded, duplicatesCount, false
 	}
 }
 
 // Sync profile
-func syncProfile(profileID string) bool {
+func syncProfile(profileID string) ProfileResult {
+	result := ProfileResult{ProfileID: profileID}
 	log.Printf("Starting sync for profile %s", profileID)
 
 	// Fetch all folder data first
@@ -484,14 +500,14 @@ func syncProfile(profileID string) bool {
 
 	if len(folderDataList) == 0 {
 		log.Printf("No valid folder data found")
-		return false
+		return result
 	}
 
 	// Get existing folders and delete target folders
 	existingFolders, err := listExistingFolders(profileID)
 	if err != nil {
 		log.Printf("Failed to list existing folders: %v", err)
-		return false
+		return result
 	}
 
 	for _, folderData := range folderDataList {
@@ -505,7 +521,7 @@ func syncProfile(profileID string) bool {
 	existingRules, err := getAllExistingRules(profileID)
 	if err != nil {
 		log.Printf("Failed to get existing rules: %v", err)
-		return false
+		return result
 	}
 
 	// Create new folders and push rules
@@ -522,19 +538,104 @@ func syncProfile(profileID string) bool {
 			}
 		}
 
+		folderResult := FolderResult{Name: name}
+
 		folderID, err := createFolder(profileID, name, do, status)
 		if err != nil {
 			log.Printf("Failed to create folder '%s': %v", name, err)
+			result.Folders = append(result.Folders, folderResult)
 			continue
 		}
 
-		if pushRules(profileID, name, folderID, do, status, hostnames, existingRules) {
+		rulesAdded, duplicates, ok := pushRules(profileID, name, folderID, do, status, hostnames, existingRules)
+		folderResult.Rules = rulesAdded
+		folderResult.Duplicates = duplicates
+		folderResult.Success = ok
+		result.Folders = append(result.Folders, folderResult)
+
+		if ok {
 			successCount++
 		}
 	}
 
 	log.Printf("Sync complete: %d/%d folders processed successfully", successCount, len(folderDataList))
-	return successCount == len(folderDataList)
+	result.Success = successCount == len(folderDataList)
+	return result
+}
+
+// Format integer with thousands separators
+func formatNumber(n int) string {
+	s := strconv.Itoa(n)
+	if n < 1000 {
+		return s
+	}
+	var result []byte
+	for i, c := range s {
+		if i > 0 && (len(s)-i)%3 == 0 {
+			result = append(result, ',')
+		}
+		result = append(result, byte(c))
+	}
+	return string(result)
+}
+
+// Write GitHub Actions job summary
+func writeSummary(results []ProfileResult) {
+	summaryPath := os.Getenv("GITHUB_STEP_SUMMARY")
+	if summaryPath == "" {
+		return
+	}
+
+	f, err := os.OpenFile(summaryPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		log.Printf("Warning: could not write GitHub summary: %v", err)
+		return
+	}
+	defer f.Close()
+
+	successProfiles := 0
+	for _, r := range results {
+		if r.Success {
+			successProfiles++
+		}
+	}
+
+	fmt.Fprintf(f, "## Control D \xc3\x97 Hagezi Sync\n\n")
+
+	if successProfiles == len(results) {
+		fmt.Fprintf(f, "> \xe2\x9c\x85 All %d profile(s) synced successfully\n\n", len(results))
+	} else {
+		fmt.Fprintf(f, "> \xe2\x9d\x8c %d/%d profile(s) failed\n\n", len(results)-successProfiles, len(results))
+	}
+
+	for _, r := range results {
+		statusIcon := "\xe2\x9c\x85"
+		if !r.Success {
+			statusIcon = "\xe2\x9d\x8c"
+		}
+		fmt.Fprintf(f, "### %s Profile `%s`\n\n", statusIcon, r.ProfileID)
+		fmt.Fprintf(f, "| Folder | Rules Pushed | Duplicates Skipped | Status |\n")
+		fmt.Fprintf(f, "|--------|--------------|--------------------|--------|\n")
+
+		totalRules := 0
+		totalDuplicates := 0
+		for _, folder := range r.Folders {
+			icon := "\xe2\x9c\x85"
+			if !folder.Success {
+				icon = "\xe2\x9d\x8c"
+			}
+			fmt.Fprintf(f, "| %s | %s | %s | %s |\n",
+				folder.Name,
+				formatNumber(folder.Rules),
+				formatNumber(folder.Duplicates),
+				icon)
+			totalRules += folder.Rules
+			totalDuplicates += folder.Duplicates
+		}
+		fmt.Fprintf(f, "| **Total** | **%s** | **%s** | |\n\n",
+			formatNumber(totalRules),
+			formatNumber(totalDuplicates))
+	}
 }
 
 // Main function
@@ -582,6 +683,8 @@ func main() {
 	semaphore := make(chan struct{}, MaxConcurrentProfiles)
 	var wg sync.WaitGroup
 	var successCount int32
+	var resultsMu sync.Mutex
+	var allResults []ProfileResult
 
 	log.Printf("Starting concurrent sync for %d profiles (max %d concurrent)", len(profileIDs), MaxConcurrentProfiles)
 
@@ -594,7 +697,12 @@ func main() {
 			semaphore <- struct{}{}
 			defer func() { <-semaphore }() // Release semaphore
 
-			if syncProfile(id) {
+			result := syncProfile(id)
+			resultsMu.Lock()
+			allResults = append(allResults, result)
+			resultsMu.Unlock()
+
+			if result.Success {
 				atomic.AddInt32(&successCount, 1)
 			}
 		}(profileID)
@@ -602,6 +710,8 @@ func main() {
 
 	// Wait for all goroutines to complete
 	wg.Wait()
+
+	writeSummary(allResults)
 
 	finalSuccessCount := int(atomic.LoadInt32(&successCount))
 	log.Printf("All profiles processed: %d/%d successful", finalSuccessCount, len(profileIDs))
