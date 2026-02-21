@@ -70,3 +70,7 @@ To add or remove lists, edit `lists.txt`. Run `make list` to see all available H
 ## License
 
 MIT
+
+---
+
+If this project is useful to you, consider leaving a ⭐ on GitHub — it helps others find it.
