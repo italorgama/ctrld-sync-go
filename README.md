@@ -48,6 +48,8 @@ That's it. The workflows will run automatically from now on.
 
 You can also trigger a manual sync anytime via *Actions → Sync → Run workflow*.
 
+After each run, a summary with the number of folders and rules synced per profile is available under the *Summary* tab of the workflow run.
+
 ## Synced lists
 
 Although this project ships pre-configured for Hagezi — chosen for the quality of its lists and the activity of the project — it supports any list in Control D's JSON folder format. Just add the raw URL to `lists.txt`.
@@ -68,3 +70,7 @@ To add or remove lists, edit `lists.txt`. Run `make list` to see all available H
 ## License
 
 MIT
+
+---
+
+If this project is useful to you, consider leaving a ⭐ on GitHub — it helps others find it.
