@@ -563,6 +563,14 @@ func syncProfile(profileID string) ProfileResult {
 	return result
 }
 
+// Mask profile ID for public display
+func maskID(id string) string {
+	if len(id) <= 3 {
+		return "***"
+	}
+	return id[:3] + "***"
+}
+
 // Format integer with thousands separators
 func formatNumber(n int) string {
 	s := strconv.Itoa(n)
@@ -613,7 +621,7 @@ func writeSummary(results []ProfileResult) {
 		if !r.Success {
 			statusIcon = "\xe2\x9d\x8c"
 		}
-		fmt.Fprintf(f, "### %s Profile `%s`\n\n", statusIcon, r.ProfileID)
+		fmt.Fprintf(f, "### %s Profile `%s`\n\n", statusIcon, maskID(r.ProfileID))
 		fmt.Fprintf(f, "| Folder | Rules Pushed | Duplicates Skipped | Status |\n")
 		fmt.Fprintf(f, "|--------|--------------|--------------------|--------|\n")
 
